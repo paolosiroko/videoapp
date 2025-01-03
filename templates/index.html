@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Video Creation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        #progressBar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            display: none;
+        }
+        #progress {
+            width: 0;
+            height: 30px;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Automated YouTube Video Creation</h1>
+        <form id="videoForm">
+            <label for="topic">Enter Video Topic:</label>
+            <input type="text" id="topic" name="topic" required>
+            <!-- <label for="video_file">Select Video Clip:</label>
+            <input type="file" id="video_file" name="video_file" accept="video/*" required> -->
+            <button type="submit">Generate Script</button>
+        </form>
+        <div id="scriptSection" style="display:none;">
+            <h3 >Generated Script</h3>
+            <pre id="scriptText"></pre>
+            <button id="createVideoBtn">Create Video</button>
+            <div id="progressBar">
+                <div id="progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('videoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const topic = document.getElementById('topic').value;
+
+            const formData = new FormData();
+            formData.append('topic', topic);
+           
+
+            fetch('/generate_script', {
+                method: 'POST',
+                body: new URLSearchParams({ 'topic': topic }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('scriptText').textContent = data.script;
+                document.getElementById('scriptSection').style.display = 'block';
+            });
+        });
+
+        document.getElementById('createVideoBtn').addEventListener('click', function() {
+            const script = document.getElementById('scriptText').textContent;
+            
+
+            const formData = new FormData();
+            formData.append('script', script);
+            
+
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+            progressBar.style.display = 'block';
+            progress.style.width = '0%';
+
+            fetch('/create_video', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                progress.style.width = '100%'; // Complete progress
+            });
+        });
+    </script>
+</body>
+</html>
