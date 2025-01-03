@@ -4,7 +4,7 @@ from gtts import gTTS
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip
 
 # Set up your OpenAI API key
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='')
 app = Flask(__name__)
 
 # Home route
