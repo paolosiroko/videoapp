@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, jsonify
-from openai import OpenAI
+import abacusai
 from gtts import gTTS
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip
 
-# Set up your OpenAI API key
-client = OpenAI(api_key='')
 app = Flask(__name__)
+
+client = abacusai.ApiClient("")
+
 
 # Home route
 @app.route('/')
@@ -19,19 +20,13 @@ def generate_script():
     
     # Create a prompt for generating a clean narrative script
     prompt = f"Write a detailed narrative script for a YouTube video on the topic: {topic}. The script should be in a conversational tone, suitable for text-to-speech, and should not include any comments, formatting, or annotations."
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": f"You are a helpful assistant that creates YouTube scripts for a video about {topic}. The output should be a clean narrative without any comments or formatting."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.3,
-    )
-    
+    model="gpt-4o-mini",
+      
+    r = client.evaluate_prompt(prompt = prompt, system_message = f"You are a helpful assistant that creates YouTube scripts for a video about {topic}. The output should be a clean narrative without any comments or formatting.", llm_name = "OPENAI_GPT4O")
+    # Response:
+    print(r.content)
     # Extract the generated script
-    script = response.choices[0].message.content.strip()
-    
+    script =r.content
     # Return the script in a JSON response
     return jsonify({"script": script})
 
