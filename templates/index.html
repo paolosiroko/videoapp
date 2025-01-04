@@ -22,15 +22,15 @@
 <body>
     <div class="container">
         <h1>Automated YouTube Video Creation</h1>
-        <form id="videoForm">
+        <form id="videoForm" enctype="multipart/form-data">
             <label for="topic">Enter Video Topic:</label>
             <input type="text" id="topic" name="topic" required>
-            <!-- <label for="video_file">Select Video Clip:</label>
-            <input type="file" id="video_file" name="video_file" accept="video/*" required> -->
+            <label for="video_file">Select Video Clip:</label>
+            <input type="file" id="video_file" name="video_file" accept="video/*" required>
             <button type="submit">Generate Script</button>
         </form>
         <div id="scriptSection" style="display:none;">
-            <h3 >Generated Script</h3>
+            <h3>Generated Script</h3>
             <pre id="scriptText"></pre>
             <button id="createVideoBtn">Create Video</button>
             <div id="progressBar">
@@ -43,15 +43,15 @@
         document.getElementById('videoForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const topic = document.getElementById('topic').value;
+            const videoFile = document.getElementById('video_file').files[0];
 
             const formData = new FormData();
             formData.append('topic', topic);
-           
+            formData.append('video_file', videoFile);
 
             fetch('/generate_script', {
                 method: 'POST',
-                body: new URLSearchParams({ 'topic': topic }),
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
@@ -62,11 +62,11 @@
 
         document.getElementById('createVideoBtn').addEventListener('click', function() {
             const script = document.getElementById('scriptText').textContent;
-            
+            const videoFile = document.getElementById('video_file').files[0];
 
             const formData = new FormData();
             formData.append('script', script);
-            
+            formData.append('video_file', videoFile);
 
             const progressBar = document.getElementById('progressBar');
             const progress = document.getElementById('progress');

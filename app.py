@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, jsonify
+import os
 import abacusai
 from gtts import gTTS
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip
 
 app = Flask(__name__)
 
-client = abacusai.ApiClient("")
+# Create uploads directory if it doesn't exist
+if not os.path.exists('uploads'):
+    os.makedirs('uploads')
 
+client = abacusai.ApiClient("s2_6c16e1b965a74e4eaa86c3fb982d58d0")
 
 # Home route
 @app.route('/')
@@ -22,27 +26,33 @@ def generate_script():
     prompt = f"Write a detailed narrative script for a YouTube video on the topic: {topic}. The script should be in a conversational tone, suitable for text-to-speech, and should not include any comments, formatting, or annotations."
     model="gpt-4o-mini",
       
-    r = client.evaluate_prompt(prompt = prompt, system_message = f"You are a helpful assistant that creates YouTube scripts for a video about {topic}. The output should be a clean narrative without any comments or formatting.", llm_name = "OPENAI_GPT4O")
+    r = client.evaluate_prompt(prompt=prompt, system_message=f"You are a helpful assistant that creates YouTube scripts for a video about {topic}. The output should be a clean narrative without any comments or formatting.", llm_name="OPENAI_GPT4O")
+    
     # Response:
     print(r.content)
     # Extract the generated script
-    script =r.content
+    script = r.content
     # Return the script in a JSON response
     return jsonify({"script": script})
 
-# API endpoint to create voiceover and video (mock example)
+# API endpoint to create voiceover and video
 @app.route('/create_video', methods=['POST'])
 def create_video():
     try:
-        # Get the script from the POST request
+        # Get the script and video file from the POST request
         script = request.form['script']
+        video_file = request.files['video_file']
+        
+        # Save the uploaded video file temporarily
+        video_file_path = os.path.join("uploads", video_file.filename)
+        video_file.save(video_file_path)
         
         # Generate voiceover using Google Text-to-Speech (gTTS)
         tts = gTTS(script, lang='en')
         tts.save("voiceover.mp3")
         
         # Load the video clip
-        clip = VideoFileClip("clip.mp4")  # Replace with your actual video file
+        clip = VideoFileClip(video_file_path)  # Use the uploaded video file
         
         # Load the audio file
         audio_clip = AudioFileClip("voiceover.mp3")
