@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
 import abacusai
 from gtts import gTTS
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, concatenate_videoclips
 
 app = Flask(__name__)
 
@@ -66,14 +66,20 @@ def create_video():
         print(f"Audio duration: {audio_clip.duration}")
         print(f"Video duration before trimming: {clip.duration}")
         
-        # Trim the video to match the audio length
-        trimmed_clip = clip.subclip(0, min(clip.duration, audio_clip.duration))
         
-        # Debug: Check trimmed video duration
-        print(f"Video duration after trimming: {trimmed_clip.duration}")
+        # Loop the video clip to match the audio length
+        num_loops = int(audio_clip.duration // clip.duration) + 1
+        looped_clips = [clip] * num_loops
+        final_video_clip = concatenate_videoclips(looped_clips)
+        
+        # Trim the final video to match the audio length
+        final_video_clip = final_video_clip.subclip(0, audio_clip.duration)
+        
+        # Debug: Check final video duration
+        print(f"Final video duration after looping: {final_video_clip.duration}")
         
         # Set the audio for the video
-        final_video = trimmed_clip.set_audio(audio_clip)
+        final_video = final_video_clip.set_audio(audio_clip)
         
         # Ensure the audio is correctly attached
         if not final_video.audio:
