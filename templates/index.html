@@ -37,6 +37,17 @@
                 <div id="progress"></div>
             </div>
         </div>
+        <div>
+            {% for video in videos %}
+            <div class="col-md-3">
+              <div class="thumbnail">
+                <video width="200" height="200" controls>
+                  <source src="{{ url_for('serve_video', filename=video) }}" type="video/mp4">
+                </video>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
     </div>
 
     <script>

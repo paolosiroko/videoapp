@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import os
 import abacusai
 from gtts import gTTS
@@ -11,11 +11,16 @@ if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
 client = abacusai.ApiClient("s2_6c16e1b965a74e4eaa86c3fb982d58d0")
-
+base_dir = os.path.dirname(os.path.dirname(__file__))  # Base directory of the app
+output_dir = os.path.join(base_dir, 'output')
 # Home route
 @app.route('/')
 def index():
-    return render_template('index.html')
+    videos_dir = os.path.join(output_dir)
+    # Ensure the videos and images directories exist
+    os.makedirs(videos_dir, exist_ok=True)
+    videos = os.listdir(videos_dir)
+    return render_template('index.html', videos=videos)
 
 # API endpoint to generate script
 @app.route('/generate_script', methods=['POST'])
@@ -23,10 +28,10 @@ def generate_script():
     topic = request.form['topic']
     
     # Create a prompt for generating a clean narrative script
-    prompt = f"Write a detailed narrative script for a YouTube video on the topic: {topic}. The script should be in a conversational tone, suitable for text-to-speech, and should not include any comments, formatting, or annotations."
+    prompt = f"Write a detailed narrative script for a Tick Tok video on the topic: {topic}. The script should be in a conversational tone, suitable for text-to-speech, and should not include any comments, formatting, or annotations."
     model="gpt-4o-mini",
       
-    r = client.evaluate_prompt(prompt=prompt, system_message=f"You are a helpful assistant that creates YouTube scripts for a video about {topic}. The output should be a clean narrative without any comments or formatting.", llm_name="OPENAI_GPT4O")
+    r = client.evaluate_prompt(prompt=prompt, system_message=f"You are a helpful assistant that creates Tick Tok scripts for a video about {topic}. The output should be a clean narrative without any comments or formatting.", llm_name="OPENAI_GPT4O")
     
     # Response:
     print(r.content)
@@ -77,8 +82,9 @@ def create_video():
             print("Audio successfully set.")
         
         # Write the output file
+        output_video_path = os.path.join(output_dir, f"final_video.mp4")
         final_video.write_videofile(
-            "final_video.mp4", 
+            output_video_path, 
             fps=24, 
             codec="libx264", 
             audio_codec="aac", 
@@ -93,6 +99,10 @@ def create_video():
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/output/<filename>')
+def serve_video(filename):
+    return send_from_directory(os.path.join(output_dir), filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
