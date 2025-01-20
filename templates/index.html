@@ -29,6 +29,7 @@
             <input type="file" id="video_file" name="video_file" accept="video/*" required>
             <button type="submit">Generate Script</button>
         </form>
+        <div id="loadingMessage" style="display:none;">Generating script, please wait...</div>
         <div id="scriptSection" style="display:none;">
             <h3>Generated Script</h3>
             <pre id="scriptText"></pre>
@@ -51,7 +52,7 @@
     </div>
 
     <script>
-        document.getElementById('videoForm').addEventListener('submit', function(e) {
+          document.getElementById('videoForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const topic = document.getElementById('topic').value;
             const videoFile = document.getElementById('video_file').files[0];
@@ -60,14 +61,24 @@
             formData.append('topic', topic);
             formData.append('video_file', videoFile);
 
+            // Show loading message
+            document.getElementById('loadingMessage').style.display = 'block';
+
             fetch('/generate_script', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
+                // Hide loading message
+                document.getElementById('loadingMessage').style.display = 'none';
                 document.getElementById('scriptText').textContent = data.script;
                 document.getElementById('scriptSection').style.display = 'block';
+            })
+            .catch(error => {
+                // Hide loading message in case of error
+                document.getElementById('loadingMessage').style.display = 'none';
+                console.error('Error:', error);
             });
         });
 
